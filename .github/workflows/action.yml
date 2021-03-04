@@ -20,7 +20,8 @@ jobs:
         env:
           #  the output of the action can be found in ${{ steps.update_worksheet.outputs.results }}
           RESULTS: ${{ steps.update_worksheet.outputs.results }}
+        shell: bash
         run: |
           export GITHUB_USER_NAME=${{ github.event.pull_request.user.login }}
-          index = `echo "$RESULTS" | jq -c '.results[].result.rawData | flatten | index(env.GITHUB_USER_NAME)'`
+          index=`echo "$RESULTS" | jq -c '.results[].result.rawData | flatten | index(env.GITHUB_USER_NAME)'`
           [ "$index" = "null" ] && exit 1
