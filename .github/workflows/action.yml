@@ -31,4 +31,4 @@ jobs:
           index=`echo "$RESULTS" | jq -c '.results[].result.rawData | flatten | index(env.GITHUB_USER_NAME)'`
           echo $GITHUB_USER_NAME
           echo $index
-          [ "$index" = "null" ] && exit 1
+          [ "$index" = "null" ] && echo "Username not found"
