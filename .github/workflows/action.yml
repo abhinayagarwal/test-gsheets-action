@@ -5,6 +5,10 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - id: 'update_worksheet'
         uses: jroehl/gsheet.action@release # you can specify '@release' to always have the latest changes
         with:
