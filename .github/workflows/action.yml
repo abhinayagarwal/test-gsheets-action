@@ -11,7 +11,7 @@ jobs:
           spreadsheetId: 1PBCsWr9ladI1idcnt83VjEoouIBkyy310P2M6hwIGb0
           commands: | # list of commands, specified as a valid JSON string
             [
-              { "command": "getData", "args": { "range": "<worksheetTitle>!A:A" } }
+              { "command": "getData", "args": { "range": "Sheet2!A:A" } }
             ]
         env:
           GSHEET_CLIENT_EMAIL: ${{ secrets.GSHEET_CLIENT_EMAIL }}
