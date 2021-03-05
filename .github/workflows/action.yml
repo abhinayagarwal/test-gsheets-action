@@ -1,18 +1,69 @@
-on: push
+on:
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - uses: abhinayagarwal/cla-verify-gsheets@master
-        with:
-          spreadsheetId: '1PBCsWr9ladI1idcnt83VjEoouIBkyy310P2M6hwIGb0'
-          sheetName: 'Sheet2'
-          columnName: 'A'
-          searchFor: ${{ github.event.pull_request.user.login }}
-          label: 'cla-signed'
-          message: 'Please sign CLA'
+    - id: 'query_worksheet'
+      uses: jroehl/gsheet.action@release
+      with:
+        spreadsheetId: "1PBCsWr9ladI1idcnt83VjEoouIBkyy310P2M6hwIGb0"
+        commands: |
+          [
+            { "command": "getData", "args": { "range": "Sheet2!A:A" } }
+          ]
+      env:
+        GSHEET_CLIENT_EMAIL: ${{ secrets.GSHEET_CLIENT_EMAIL }}
+        GSHEET_PRIVATE_KEY: ${{ secrets.GSHEET_PRIVATE_KEY }}
+    - name: Find username index
+      id: username-index
+      env:
+        RESULTS: ${{ steps.query_worksheet.outputs.results }}
+        GITHUB_USER_NAME: ${{ github.event.pull_request.user.login }}
+        # GITHUB_USER_NAME: ${{ github.event.pull_request.user.login }}
+        # GITHUB_USER_NAME: ${{ github.actor }}
+      shell: bash
+      run: |
+        index=`echo "$RESULTS" | jq -c '.results[].result.rawData | flatten | index(env.GITHUB_USER_NAME)'`
+        echo $GITHUB_USER_NAME
+        echo $index
+        [ "$index" = "null" ] && echo "Username not found in list"
+        echo "::set-output name=index::$index"
+    - name: Add Label and Comment
+      if: steps.username-index.outputs.index != 'null' && inputs.label != ''
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: 'Please sign ControlsFX Contributor Agreement: https://cla.controlsfx.org'
+          })
+          github.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['CLA']
+          })
+    - name: Remove Label
+      if: steps.username-index.outputs.index != 'null' && inputs.label != ''
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['CLA-VERIFIED']
+          })
+          github.issues.removeLabel({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['CLA']
+          })
