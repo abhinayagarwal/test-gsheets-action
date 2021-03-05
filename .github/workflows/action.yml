@@ -33,7 +33,7 @@ jobs:
         [ "$index" = "null" ] && echo "Username not found in list"
         echo "::set-output name=index::$index"
     - name: Add Label and Comment
-      if: steps.username-index.outputs.index != 'null' && inputs.label != ''
+      if: steps.username-index.outputs.index != 'null'
       uses: actions/github-script@v3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -51,7 +51,7 @@ jobs:
             labels: ['CLA']
           })
     - name: Remove Label
-      if: steps.username-index.outputs.index != 'null' && inputs.label != ''
+      if: steps.username-index.outputs.index != 'null'
       uses: actions/github-script@v3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
